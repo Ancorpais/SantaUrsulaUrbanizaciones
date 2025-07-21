@@ -58,12 +58,41 @@ def calculate_supUrb(query_result):
         print("Error al actualizar:", update_result)
 
 
+# Calcular el valor del campo longitud_urbaniz
+def calculate_longitudUrbaniz(query_result):
+
+    total_longitudUrbaniz = 0
+
+    for feature in query_result.features:
+        urb = feature.attributes.get('URBANIZ')
+        longitud_tramo = feature.attributes.get('longitud_tramo')
+
+        if urb is not None and urb != "":
+            total_longitudUrbaniz += longitud_tramo or 0
+
+    features_to_update = []
+    
+
+    for feature in query_result.features:
+        attrs = feature.attributes
+        attrs["longitud_tramo"] = total_longitudUrbaniz
+        features_to_update.append({"attributes": attrs})
+        reporte_feature_update.append(attrs["objectid"])
+
+    update_result = urbanizaciones_layer.edit_features(updates=features_to_update)
+
+    # Verificar resultado
+    if 'updateResults' in update_result:
+        print("Actualización completada. Entidades modificadas:", len(update_result['updateResults']))
+    else:
+        print("Error al actualizar:", update_result)
+
 
 # Obtener entidades a actualizar
 def entidades_Actualizar():
 
     expresion = f"last_edited_date > DATE '{fecha_ult_actualizacion}'"
-    urbanizaciones_actualizar = urbanizaciones_layer.query(where=expresion, out_fields="objectid,urbaniz,sup_tramo", return_geometry=False)
+    urbanizaciones_actualizar = urbanizaciones_layer.query(where=expresion, out_fields="objectid,urbaniz,sup_tramo,longitud_urbaniz,longitud_tramo", return_geometry=False)
 
     urbaniz_actualizadas = []
 
@@ -72,9 +101,10 @@ def entidades_Actualizar():
         if urb.attributes['urbaniz'] not in urbaniz_actualizadas:
             urbaniz_actualizadas.append(urb.attributes['urbaniz'])
             expresion = "urbaniz = " + str(urb.attributes['urbaniz'])
-            query_result = urbanizaciones_layer.query(where=expresion, out_fields="objectid,urbaniz,sup_tramo", return_geometry=False)
+            query_result = urbanizaciones_layer.query(where=expresion, out_fields="objectid,urbaniz,sup_tramo,longitud_urbaniz,longitud_tramo", return_geometry=False)
 
             calculate_supUrb(query_result)
+            calculate_longitudUrbaniz(query_result)
 
 
 # Actualizar fecha de ultima actualizacion
