@@ -10,7 +10,7 @@ import smtplib
 import logging
 
 # Cargar datos config
-dataset = "C:/Users/apaitos/Desktop/URBANIZACIONES_SANTA_URSULA/Script/Python/config.json"
+dataset = "\\\\172.33.154.245//datos//ArcGISPro//urbanizaciones_santa_ursula//Script//Python//config.json"
 with open(dataset, "r", encoding="utf-8") as file:
     config = json.load(file)
     capa_urbanizacion = config.get("capa_urbanizacion")
@@ -19,29 +19,26 @@ with open(dataset, "r", encoding="utf-8") as file:
     password = config.get("password")
     fecha_ult_actualizacion = config.get("fecha_ult_actualizacion")
 
-
 # Conectar Portal
-gis = GIS(portal, user, password) 
+gis = GIS(portal, user, password)
 reporte_feature_update = []
 
 # Capa base donde se encuentra el feature original
 urbanizaciones_layer = FeatureLayer(capa_urbanizacion, gis)
- 
+
 
 # Calcular el valor del campo sup_urb
 def calculate_supUrb(query_result):
-
     total_supUrb = 0
 
     for feature in query_result.features:
-        urb = feature.attributes.get('URBANIZ')
-        sup_tramo = feature.attributes.get('SUP_TRAMO')
+        urb = feature.attributes.get('urbaniz')
+        sup_tramo = feature.attributes.get('sup_tramo')
 
         if urb is not None and urb != "":
             total_supUrb += sup_tramo or 0
 
     features_to_update = []
-    
 
     for feature in query_result.features:
         attrs = feature.attributes
@@ -60,22 +57,20 @@ def calculate_supUrb(query_result):
 
 # Calcular el valor del campo longitud_urbaniz
 def calculate_longitudUrbaniz(query_result):
-
     total_longitudUrbaniz = 0
 
     for feature in query_result.features:
-        urb = feature.attributes.get('URBANIZ')
+        urb = feature.attributes.get('urbaniz')
         longitud_tramo = feature.attributes.get('longitud_tramo')
 
         if urb is not None and urb != "":
             total_longitudUrbaniz += longitud_tramo or 0
 
     features_to_update = []
-    
 
     for feature in query_result.features:
         attrs = feature.attributes
-        attrs["longitud_tramo"] = total_longitudUrbaniz
+        attrs["longitud_urbaniz"] = total_longitudUrbaniz
         features_to_update.append({"attributes": attrs})
         reporte_feature_update.append(attrs["objectid"])
 
@@ -90,9 +85,10 @@ def calculate_longitudUrbaniz(query_result):
 
 # Obtener entidades a actualizar
 def entidades_Actualizar():
-
     expresion = f"last_edited_date > DATE '{fecha_ult_actualizacion}'"
-    urbanizaciones_actualizar = urbanizaciones_layer.query(where=expresion, out_fields="objectid,urbaniz,sup_tramo,longitud_urbaniz,longitud_tramo", return_geometry=False)
+    urbanizaciones_actualizar = urbanizaciones_layer.query(where=expresion,
+                                                           out_fields="objectid,urbaniz,sup_tramo,longitud_urbaniz,longitud_tramo",
+                                                           return_geometry=False)
 
     urbaniz_actualizadas = []
 
@@ -101,7 +97,9 @@ def entidades_Actualizar():
         if urb.attributes['urbaniz'] not in urbaniz_actualizadas:
             urbaniz_actualizadas.append(urb.attributes['urbaniz'])
             expresion = "urbaniz = " + str(urb.attributes['urbaniz'])
-            query_result = urbanizaciones_layer.query(where=expresion, out_fields="objectid,urbaniz,sup_tramo,longitud_urbaniz,longitud_tramo", return_geometry=False)
+            query_result = urbanizaciones_layer.query(where=expresion,
+                                                      out_fields="objectid,urbaniz,sup_tramo,longitud_urbaniz,longitud_tramo",
+                                                      return_geometry=False)
 
             calculate_supUrb(query_result)
             calculate_longitudUrbaniz(query_result)
@@ -113,7 +111,7 @@ def actualizar_fechaModif():
         fecha_actual = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         # Actualizar el archivo JSON
-        with open("/config.json", 'r') as archivo:
+        with open("\\\\172.33.154.245//datos//ArcGISPro//urbanizaciones_santa_ursula//Script//Python//config.json", 'r') as archivo:
             data = json.load(archivo)
             data['fecha_ult_actualizacion'] = fecha_actual
 
@@ -126,8 +124,6 @@ def actualizar_fechaModif():
     except Exception as e:
         logging.error(' Ha ocurrido un error al modificar la fecha de actualizacon en el json: ' + str(e))
         print('Ha ocurrido un error al modificar la fecha de actualizacon en el json: ' + str(e))
-
-
 
 
 # Enviar correo
@@ -177,12 +173,6 @@ def enviarCorreo(bdyErr):
     send_email_smtp(msg, smtp_server_url, smtp_server_port, username, password, recipients)
 
 
-
-
-
-
-
-
 if __name__ == "__main__":
 
     entidades_Actualizar()
@@ -193,5 +183,6 @@ if __name__ == "__main__":
     for exp in reporte_feature_update:
         expediente_modif += str(exp) + "; "
 
-    enviarCorreo("<html>Se ha ejecutado correctamente el script de calculo de campo sup_urb del proyecto de Santa Ursula.<br>"
-                "Expedientes actualizados: " + expediente_modif + "</html>")
+    enviarCorreo(
+        "<html>Se ha ejecutado correctamente el script de calculo de campo sup_urb del proyecto de Santa Ursula.<br>"
+        "Expedientes actualizados: " + expediente_modif + "</html>")
