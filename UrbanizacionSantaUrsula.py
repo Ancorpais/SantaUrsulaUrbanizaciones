@@ -83,6 +83,66 @@ def calculate_longitudUrbaniz(query_result):
         print("Error al actualizar:", update_result)
 
 
+
+# Calcular el valor del campo coste_acondic_urbaniz
+def calculate_coste_acondic_urbaniz(query_result):
+    total_coste_acondic_urbaniz = 0
+
+    for feature in query_result.features:
+        urb = feature.attributes.get('urbaniz')
+        coste_total_interv = feature.attributes.get('coste_total_interv')
+
+        if urb is not None and urb != "":
+            total_coste_acondic_urbaniz += coste_total_interv or 0
+
+    features_to_update = []
+
+    for feature in query_result.features:
+        attrs = feature.attributes
+        attrs["coste_acondic_urbaniz"] = total_coste_acondic_urbaniz
+        features_to_update.append({"attributes": attrs})
+        reporte_feature_update.append(attrs["objectid"])
+
+    update_result = urbanizaciones_layer.edit_features(updates=features_to_update)
+
+    # Verificar resultado
+    if 'updateResults' in update_result:
+        print("Actualización completada. Entidades modificadas:", len(update_result['updateResults']))
+    else:
+        print("Error al actualizar:", update_result)
+
+
+
+# Calcular el valor del campo coste_total_urbaniz
+def calculate_coste_total_urbaniz(query_result):
+    total_coste_total_urbaniz = 0
+
+    for feature in query_result.features:
+        urb = feature.attributes.get('urbaniz')
+        coste_urbaniz_tramo = feature.attributes.get('coste_urbaniz_tramo')
+
+        if urb is not None and urb != "":
+            total_coste_total_urbaniz += coste_urbaniz_tramo or 0
+
+    features_to_update = []
+
+    for feature in query_result.features:
+        attrs = feature.attributes
+        attrs["coste_total_urbaniz"] = total_coste_total_urbaniz
+        features_to_update.append({"attributes": attrs})
+        reporte_feature_update.append(attrs["objectid"])
+
+    update_result = urbanizaciones_layer.edit_features(updates=features_to_update)
+
+    # Verificar resultado
+    if 'updateResults' in update_result:
+        print("Actualización completada. Entidades modificadas:", len(update_result['updateResults']))
+    else:
+        print("Error al actualizar:", update_result)
+
+
+
+
 # Obtener entidades a actualizar
 def entidades_Actualizar():
     expresion = f"last_edited_date > DATE '{fecha_ult_actualizacion}'"
@@ -103,6 +163,8 @@ def entidades_Actualizar():
 
             calculate_supUrb(query_result)
             calculate_longitudUrbaniz(query_result)
+            calculate_coste_acondic_urbaniz(query_result)
+            calculate_coste_total_urbaniz(query_result)
 
 
 # Actualizar fecha de ultima actualizacion
