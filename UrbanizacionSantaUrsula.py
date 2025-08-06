@@ -42,7 +42,7 @@ def calculate_supUrb(query_result):
 
     for feature in query_result.features:
         attrs = feature.attributes
-        attrs["sup_tramo"] = total_supUrb
+        attrs["sup_urb"] = total_supUrb
         features_to_update.append({"attributes": attrs})
         reporte_feature_update.append(attrs["objectid"])
 
@@ -147,7 +147,7 @@ def calculate_coste_total_urbaniz(query_result):
 def entidades_Actualizar():
     expresion = f"last_edited_date > DATE '{fecha_ult_actualizacion}'"
     urbanizaciones_actualizar = urbanizaciones_layer.query(where=expresion,
-                                                           out_fields="objectid,urbaniz,sup_tramo,longitud_urbaniz,longitud_tramo,coste_acondic_urbaniz,coste_total_interv,coste_total_urbaniz,coste_urbaniz_tramo",
+                                                           out_fields="objectid,urbaniz,sup_tramo,sup_urb,longitud_urbaniz,longitud_tramo,coste_acondic_urbaniz,coste_total_interv,coste_total_urbaniz,coste_urbaniz_tramo",
                                                            return_geometry=False)
 
     urbaniz_actualizadas = []
